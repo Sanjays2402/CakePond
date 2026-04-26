@@ -61,7 +61,19 @@ jobs:
           PLIST
           codesign --force --deep --sign - "$APP"
           ditto -c -k --keepParent "$APP" "dist/$APP_NAME-macOS.zip"
+
+          mkdir -p dmg-root
+          cp -R "$APP" dmg-root/
+          ln -s /Applications dmg-root/Applications
+          hdiutil create \
+            -volname "Cake Pond" \
+            -srcfolder dmg-root \
+            -ov \
+            -format UDZO \
+            "dist/$APP_NAME-macOS.dmg"
+
           shasum -a 256 "dist/$APP_NAME-macOS.zip" > "dist/$APP_NAME-macOS.zip.sha256"
+          shasum -a 256 "dist/$APP_NAME-macOS.dmg" > "dist/$APP_NAME-macOS.dmg.sha256"
           ls -lh dist
 
       - name: Upload app artifact
@@ -71,6 +83,8 @@ jobs:
           path: |
             dist/CakePond-macOS.zip
             dist/CakePond-macOS.zip.sha256
+            dist/CakePond-macOS.dmg
+            dist/CakePond-macOS.dmg.sha256
           if-no-files-found: error
 
       - name: Publish latest release
@@ -82,8 +96,10 @@ jobs:
           body: |
             Automated macOS build for Cake Pond.
 
-            Download `CakePond-macOS.zip`, unzip it, then open `CakePond.app`.
+            Download `CakePond-macOS.dmg`, open it, then drag `CakePond.app` into Applications.
           files: |
             dist/CakePond-macOS.zip
             dist/CakePond-macOS.zip.sha256
+            dist/CakePond-macOS.dmg
+            dist/CakePond-macOS.dmg.sha256
           make_latest: true
