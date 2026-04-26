@@ -1,0 +1,89 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  APP_NAME: CakePond
+  BUNDLE_ID: ai.cake.cakepond
+
+jobs:
+  build:
+    name: Build Cake Pond app bundle
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Create app bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$APP_NAME.app"
+          rm -rf "$APP" dist
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" dist
+          cp ".build/release/$APP_NAME" "$APP/Contents/MacOS/$APP_NAME"
+          chmod +x "$APP/Contents/MacOS/$APP_NAME"
+          cat > "$APP/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>$APP_NAME</string>
+            <key>CFBundleIdentifier</key>
+            <string>$BUNDLE_ID</string>
+            <key>CFBundleName</key>
+            <string>Cake Pond</string>
+            <key>CFBundleDisplayName</key>
+            <string>Cake Pond</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.${{ github.run_number }}</string>
+            <key>CFBundleVersion</key>
+            <string>${{ github.run_number }}</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>14.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+          codesign --force --deep --sign - "$APP"
+          ditto -c -k --keepParent "$APP" "dist/$APP_NAME-macOS.zip"
+          shasum -a 256 "dist/$APP_NAME-macOS.zip" > "dist/$APP_NAME-macOS.zip.sha256"
+          ls -lh dist
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CakePond-macOS
+          path: |
+            dist/CakePond-macOS.zip
+            dist/CakePond-macOS.zip.sha256
+          if-no-files-found: error
+
+      - name: Publish latest release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Cake Pond latest
+          body: |
+            Automated macOS build for Cake Pond.
+
+            Download `CakePond-macOS.zip`, unzip it, then open `CakePond.app`.
+          files: |
+            dist/CakePond-macOS.zip
+            dist/CakePond-macOS.zip.sha256
+          make_latest: true
