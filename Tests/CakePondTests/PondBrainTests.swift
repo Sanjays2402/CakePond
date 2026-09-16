@@ -22,4 +22,11 @@ final class PondBrainTests: XCTestCase {
         XCTAssertTrue(PondBrain.compliment(for: 5).contains("overclocked"))
         XCTAssertTrue(PondBrain.compliment(for: 20).contains("senior sparkle engineer"))
     }
+
+    func testDawnMoodExistsInMoodList() {
+        let dawn = PondMood.moods.first(where: { $0.name == "Dawn" })
+        XCTAssertNotNil(dawn)
+        XCTAssertEqual(dawn?.subtitle, "first light on still water")
+        XCTAssertEqual(dawn?.sparkleRate, 0.5)
+    }
 }

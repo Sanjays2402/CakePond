@@ -10,7 +10,8 @@ struct PondMood: Equatable {
         PondMood(name: "Focus", subtitle: "quiet ripples for deep work", hueShift: 0.58, sparkleRate: 0.18),
         PondMood(name: "Chaos", subtitle: "tiny comet storm, very scientific", hueShift: 0.86, sparkleRate: 0.78),
         PondMood(name: "Cozy", subtitle: "warm lights, soft pond", hueShift: 0.07, sparkleRate: 0.32),
-        PondMood(name: "Party", subtitle: "confetti koi unlocked", hueShift: 0.74, sparkleRate: 0.95)
+        PondMood(name: "Party", subtitle: "confetti koi unlocked", hueShift: 0.74, sparkleRate: 0.95),
+        PondMood(name: "Dawn", subtitle: "first light on still water", hueShift: 0.94, sparkleRate: 0.5)
     ]
 }
 
